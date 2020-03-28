@@ -1,0 +1,16 @@
+{
+    "name": "dynablogger",
+    "devDependencies": {
+        "@types/node": "^8.0.0"
+    },
+    "dependencies": {
+        "@pulumi/kubernetes": "^1.6.0",
+        "@pulumi/pulumi": "^1.0.0",
+        "@types/shelljs": "^0.8.7",
+        "@types/yaml": "^1.2.0",
+        "fs": "0.0.1-security",
+        "js-yaml": "^3.13.1",
+        "path": "^0.12.7",
+        "shelljs": "^0.8.3"
+    }
+}
