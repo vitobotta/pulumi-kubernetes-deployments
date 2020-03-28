@@ -2,6 +2,8 @@
 
 This is a collection of [Pulumi](https://www.pulumi.com/) scripts I use to automate repeatitive deployments of applications and services to Kubernetes. I am still learning both Pulumi and [Typescript](https://www.typescriptlang.org/) so perhaps something could be more polished, but this code has been througly tested and is being actively maintained. This code assumes you have a Kubernetes cluster already provisioned, and Pulumi set up on your machine.
 
+Note: when Pulumi config/secrets are required, the name of the configuration setting or secret must be prefixed with the name given to the app when instantiating the relevant class. For example, for a deployment of cert-manager named "cert-manager", the names of config/secrets must be prefixed with "cert-manager:".
+
 ## cert-manager
 
 Deploys [cert-manager](https://cert-manager.io/), which is the most popular solution to issue and manage TLS certificates with LetsEncrypt and more, on Kubernetes. The code assumes DNS01 challenges are configured, alongside HTTP01 challenges, using [Cloudflare](https://www.cloudflare.com/). You may have to adapt the code if you use another provider or want to make this option configurable.
