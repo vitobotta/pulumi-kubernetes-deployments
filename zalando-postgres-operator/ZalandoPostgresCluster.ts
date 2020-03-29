@@ -57,7 +57,7 @@ export class ZalandoPostgresCluster extends pulumi.ComponentResource  {
     const numberOfInstances = args.numberOfInstances || 1
     const version = args.version || "12"
     const sharedBuffers = args.sharedBuffers || "32MB"
-    const maxConnections = args.maxConnections || "1000"
+    const maxConnections = args.maxConnections || "500"
     const cpuRequest = args.cpuRequest || "10m"
     const memoryRequest = args.memoryRequest || "100Mi"
     const cpuLimit = args.cpuLimit || "500m"
