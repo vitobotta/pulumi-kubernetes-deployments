@@ -14,6 +14,8 @@ export interface ZalandoPostgresOperatorArgs {
   s3Bucket?: pulumi.Input<string>,
   logicalBackupS3SSE?: pulumi.Input<string>,
   logicalBackupDefaultSchedule?: pulumi.Input<string>,
+  spiloImage?: pulumi.Input<string>,
+  logicalBackupsImage?: pulumi.Input<string>,
 }
 
 export class ZalandoPostgresOperator extends pulumi.ComponentResource  {
@@ -36,6 +38,8 @@ export class ZalandoPostgresOperator extends pulumi.ComponentResource  {
     const logicalBackupDefaultSchedule = args.logicalBackupDefaultSchedule || config.get('logicalBackupDefaultSchedule') || "00 05 * * *"
     const s3AccessKeyId = config.requireSecret('s3AccessKeyId')
     const s3SecretAccessKey = config.requireSecret('s3SecretAccessKey')
+    const spiloImage = args.spiloImage || "registry.opensource.zalan.do/acid/spilo-12:1.6-p2"
+    const logicalBackupsImage = args.logicalBackupsImage || "vitobotta/postgres-logical-backup:0.0.13"
 
     const ns = new k8s.core.v1.Namespace(
       `${appName}-ns`,
@@ -97,7 +101,7 @@ export class ZalandoPostgresOperator extends pulumi.ComponentResource  {
         enable_database_access: true
       },
       configLogicalBackup: {
-        logical_backup_docker_image: "vitobotta/postgres-logical-backup:0.0.13",
+        logical_backup_docker_image: logicalBackupsImage,
         logical_backup_s3_access_key_id: s3AccessKeyId,
         logical_backup_s3_bucket: s3Bucket,
         logical_backup_s3_region: s3Region,
@@ -112,6 +116,7 @@ export class ZalandoPostgresOperator extends pulumi.ComponentResource  {
         workers: 4,
         min_instances: -1,
         max_instances: -1,
+        docker_image: spiloImage
       },
       configTeamsApi: {
         enable_team_superuser: false,
