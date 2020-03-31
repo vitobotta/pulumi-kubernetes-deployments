@@ -203,6 +203,25 @@ import { Velero } from "../vendor/velero/Velero";
 const velero = new Velero("velero", {});
 ```
 
+## Harbor
+
+[Harbor](https://goharbor.io/) is a very popular and feature rich container registry.
+
+Configuration:
+
+```bash
+pulumi config set --secret harbor:adminPassword ...
+pulumi config set --secret harbor:secretKey ...
+```
+
+Installation:
+
+```typescript
+import { Harbor } from "../vendor/harbor/Harbor";
+
+const harbor = new Harbor("harbor", {}, { dependsOn: [hetznerCloudCSI] });
+```
+
 ## Redis
 
 Deploys Redis either in standalone mode or in clustered mode.
