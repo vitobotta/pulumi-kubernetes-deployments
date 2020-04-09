@@ -1,7 +1,7 @@
 {
     "name": "dynablogger",
     "devDependencies": {
-        "@types/node": "^8.0.0"
+        "@types/node": "^8.10.59"
     },
     "dependencies": {
         "@pulumi/kubernetes": "^1.6.0",

@@ -276,3 +276,47 @@ const anyCable = new AnyCable("anycable-go", {
   ingressClass: "<optional ingress class, default to 'nginx'>",
 })
 ```
+
+## Hetzner Cloud Floating IP controller
+
+Installs [a controller](https://github.com/cbeneke/hcloud-fip-controller) to automaically assign floating IPs in Hetzner Cloud to a healthy node. Note that each node must have a network interface configured with the floating IPs for this to work.
+
+Configuration:
+
+```bash
+pulumi config set --secret hetzner-cloud-fip-controller:apiToken <Hetzner Cloud token>
+```
+
+Installation:
+
+```typescript
+const hetznerCloudFIPController = new HetznerCloudFIPController("hetzner-cloud-fip-controller", {
+  addresses: [
+    "<floating IP 1>",
+    "<floating IP 2>",
+    "<floating IP N>",
+  ]
+});
+```
+
+## MetalLB
+
+Installs [MetalLB](https://metallb.universe.tf/), which allows creating services of type LoadBalancer on prem or when the provider doesn't offer load balancers that can be provisioned with Kubernetes. It expects a group of IPs or IP ranges. In Hetzner Cloud I am using this with floating IPs.
+
+Configuration:
+
+```bash
+pulumi config set --secret metallb:secretKey "$(openssl rand -base64 128)"
+```
+
+Installation:
+
+```typescript
+const metalLB = new MetalLB("metallb", {
+  addresses: [
+    "<IP or IP range 1>",
+    "<IP or IP range 2>",
+    "<IP or IP range N>",
+  ]
+});
+```
