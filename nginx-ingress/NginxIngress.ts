@@ -14,6 +14,7 @@ export interface NginxIngressArgs {
   useProxyProtocol?: pulumi.Input<string>,
   useForwardedHeaders?: pulumi.Input<string>,
   clientMaxBodySize?: pulumi.Input<string>,
+  deploymentKind?: pulumi.Input<string>,
 }
 
 export class NginxIngress extends pulumi.ComponentResource  {
@@ -31,12 +32,12 @@ export class NginxIngress extends pulumi.ComponentResource  {
     const ingressClass = args.ingressClass || config.ingressClass
     const nodePortHTTP = args.nodePortHTTP || config.nodePortHTTP
     const nodePortHTTPS = args.nodePortHTTPS || config.nodePortHTTPS
-    const replicaCount = args.replicaCount || config.replicaCount
-    const useProxyProtocol = args.useProxyProtocol || config.useProxyProtocol
-    const useForwardedHeaders = args.useForwardedHeaders || config.useForwardedHeaders
+    const replicaCount = args.replicaCount || config.replicaCount || 1
+    const useProxyProtocol = args.useProxyProtocol || config.useProxyProtocol || "false"
+    const useForwardedHeaders = args.useForwardedHeaders || config.useForwardedHeaders || "true"
     const clientMaxBodySize = args.clientMaxBodySize || config.clientMaxBodySize
+    const deploymentKind = args.deploymentKind || "DaemonSet"
 
-    let kind: string = "DaemonSet"
     let useHostPort: boolean = true
     let hostNetwork: boolean = true
     let externalTrafficPolicy: string = ""
@@ -69,7 +70,6 @@ export class NginxIngress extends pulumi.ComponentResource  {
         break;
       
       case "LoadBalancer":
-        kind = "Deployment"
         useHostPort = false
         hostNetwork = false
         externalTrafficPolicy = "Local"
@@ -91,7 +91,7 @@ export class NginxIngress extends pulumi.ComponentResource  {
         namespace: namespace,
         values: {
           controller: {
-            kind: kind,
+            kind: deploymentKind,
             replicaCount: replicaCount,
             service: {
               type: serviceType,
