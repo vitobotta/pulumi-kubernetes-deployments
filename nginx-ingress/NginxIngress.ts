@@ -3,6 +3,7 @@ import * as pulumi from '@pulumi/pulumi'
 
 import * as config from './config'
 
+
 export interface NginxIngressArgs {
   version?: pulumi.Input<string>,
   namespace?: pulumi.Input<string>,
@@ -15,6 +16,7 @@ export interface NginxIngressArgs {
   useForwardedHeaders?: pulumi.Input<string>,
   clientMaxBodySize?: pulumi.Input<string>,
   deploymentKind?: pulumi.Input<string>,
+  serviceAnnotations: pulumi.Input<object>,
 }
 
 export class NginxIngress extends pulumi.ComponentResource  {
@@ -37,6 +39,7 @@ export class NginxIngress extends pulumi.ComponentResource  {
     const useForwardedHeaders = args.useForwardedHeaders || config.useForwardedHeaders || "true"
     const clientMaxBodySize = args.clientMaxBodySize || config.clientMaxBodySize
     const deploymentKind = args.deploymentKind || "DaemonSet"
+    const serviceAnnotations = args.serviceAnnotations || {}
 
     let useHostPort: boolean = true
     let hostNetwork: boolean = true
@@ -96,7 +99,8 @@ export class NginxIngress extends pulumi.ComponentResource  {
             service: {
               type: serviceType,
               externalTrafficPolicy: externalTrafficPolicy,
-              nodePorts: nodePorts
+              nodePorts: nodePorts,
+              annotations: serviceAnnotations
             },
             ingressClass: ingressClass,
             daemonset: {
