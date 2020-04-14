@@ -5,7 +5,6 @@ import * as config from './config'
 
 export interface HetznerCloudCSIArgs {
   version?: pulumi.Input<string>,
-  namespace?: pulumi.Input<string>,
   token?: pulumi.Input<string>,
 }
 
@@ -20,14 +19,13 @@ export class HetznerCloudCSI extends pulumi.ComponentResource  {
 
     const version = args.version || config.version
     const token = args.token || config.token;
-    const namespace = args.namespace || config.namespace || "kube-system";
     const manifestURL = `https://raw.githubusercontent.com/hetznercloud/csi-driver/v${version}/deploy/kubernetes/hcloud-csi.yml`;
 
     const secret = new k8s.core.v1.Secret(`${appName}-hetzner-cloud-token`, 
       {
         metadata: {
           name: "hcloud-csi",
-          namespace: namespace,
+          namespace: "kube-system",
         },
         stringData: {
           token: token
