@@ -16,7 +16,7 @@ export interface NginxIngressArgs {
   useForwardedHeaders?: pulumi.Input<string>,
   clientMaxBodySize?: pulumi.Input<string>,
   deploymentKind?: pulumi.Input<string>,
-  serviceAnnotations: pulumi.Input<object>,
+  serviceAnnotations?: pulumi.Input<object>,
 }
 
 export class NginxIngress extends pulumi.ComponentResource  {
