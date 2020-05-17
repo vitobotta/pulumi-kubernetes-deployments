@@ -52,6 +52,19 @@ export class haproxyIngress extends pulumi.ComponentResource  {
       { parent: this },
     )    
 
+    if (Object.keys(configMapData).length == 0) {
+      configMapData = {
+        "healthz-port": "10253",
+        "syslog-endpoint": "127.0.0.1:514",
+        "ssl-redirect": "true",
+        "ssl-redirect-code": "301",
+        "forwardfor": "ifmissing", 
+        "max-connections": "10000",
+        "proxy-body-size": "50m",
+        "use-proxy-protocol": useProxyProtocol.toString()
+      }
+    }
+
     const haproxyIngress = new k8s.helm.v3.Chart(
       appName,
       {
@@ -66,7 +79,7 @@ export class haproxyIngress extends pulumi.ComponentResource  {
               tag: controllerImageTag
             },
             ingressClass: ingressClass,
-            configMapData: configMapData,
+            config: configMapData,
             hostNetwork: useHostNetwork,
             kind: controllerKind,
             daemonset: {
@@ -103,42 +116,6 @@ export class haproxyIngress extends pulumi.ComponentResource  {
           ns,
         ],
       },
-    )    
-
-    if (Object.keys(configMapData).length == 0) {
-      configMapData = {
-        "healthz-port": "10253",
-        "syslog-endpoint": "127.0.0.1:514",
-        "ssl-redirect": "true",
-        "ssl-redirect-code": "301",
-        "forwardfor": "ifmissing", 
-        "max-connections": "10000",
-        "proxy-body-size": "50m",
-        "use-proxy-protocol": useProxyProtocol.toString()
-      }
-    }
-
-    const configMap = new k8s.core.v1.ConfigMap(`${appName}-config-map`, {
-      metadata: {
-        namespace: namespace,
-        name: `${appName}-controller`
-      },      
-      data: {
-        "healthz-port": "10253",
-        "syslog-endpoint": "127.0.0.1:514",
-        "ssl-redirect": "true",
-        "ssl-redirect-code": "301",
-        "forwardfor": "ifmissing", 
-        "max-connections": "10000",
-        "proxy-body-size": "50m",
-        "use-proxy-protocol": useProxyProtocol.toString()
-      }
-    },
-    {
-      parent: this,
-      dependsOn: [
-        haproxyIngress,
-      ],
-    })
+    )   
   }
 }
