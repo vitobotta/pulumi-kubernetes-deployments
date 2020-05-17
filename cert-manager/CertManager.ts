@@ -9,6 +9,7 @@ export interface CertManagerArgs {
   email?: pulumi.Input<string>,
   cloudflareEmail?: pulumi.Input<string>,
   cloudflareAPIKey?: pulumi.Input<string>,
+  ingressClass?: pulumi.Input<string>,
 }
 
 export class CertManager extends pulumi.ComponentResource  {
@@ -26,6 +27,7 @@ export class CertManager extends pulumi.ComponentResource  {
     const cloudflareEmail = args.cloudflareEmail || config.cloudflareEmail;
     const cloudflareAPIKey = args.cloudflareAPIKey || config.cloudflareAPIKey;
     const crdsManifest = `https://github.com/jetstack/cert-manager/releases/download/${version}/cert-manager.crds.yaml`;
+    const ingressClass = args.ingressClass || "nginx"
 
     const ns = new k8s.core.v1.Namespace(
       `${appName}-ns`,
@@ -111,7 +113,7 @@ export class CertManager extends pulumi.ComponentResource  {
             solvers: [
               {
                 http01: {
-                  ingress: { class: "nginx" }
+                  ingress: { class: ingressClass }
                 } 
               },
               {
@@ -156,7 +158,7 @@ export class CertManager extends pulumi.ComponentResource  {
             solvers: [
               {
                 http01: {
-                  ingress: { class: "nginx" }
+                  ingress: { class: ingressClass }
                 } 
               },
               {
