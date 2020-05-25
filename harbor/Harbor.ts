@@ -9,6 +9,7 @@ export interface HarborArgs {
   certManagerClusterIssuer?: pulumi.Input<string>,
   tlsSecretName?: pulumi.Input<string>,
   tlsEnabled?: pulumi.Input<boolean>,
+  veleroBackupEnabled?: pulumi.Input<boolean>,
   clairEnabled?: pulumi.Input<boolean>,
   persistenceEnabled?: pulumi.Input<boolean>,
   storageClass?: pulumi.Input<string>,
@@ -43,6 +44,7 @@ export class Harbor extends pulumi.ComponentResource  {
     const certManagerClusterIssuer = args.certManagerClusterIssuer || "letsencrypt-prod"
     const tlsSecretName = args.tlsSecretName || "harbor-ingress-cert"
     const tlsEnabled = args.tlsEnabled || true
+    const veleroBackupEnabled = args.veleroBackupEnabled || false
     const clairEnabled = args.clairEnabled || true
     const persistenceEnabled = args.persistenceEnabled || true
     const storageClass = args.storageClass || ""
@@ -109,6 +111,29 @@ export class Harbor extends pulumi.ComponentResource  {
 
     const externalURL = (tlsEnabled ? `https://${hostname}` : `http://${hostname}`)
 
+    let jobservicePodAnnotations = {};
+    let registryPodAnnotations = {};
+    let databasePodAnnotations = {};
+    let redisPodAnnotations = {};
+
+    if (veleroBackupEnabled) {
+      jobservicePodAnnotations = {
+        "backup.velero.io/backup-volumes": "job-logs"
+      };
+
+      registryPodAnnotations = {
+        "backup.velero.io/backup-volumes": "registry-data"
+      };
+
+      databasePodAnnotations = {
+        "backup.velero.io/backup-volumes": "database-data"
+      };
+
+      redisPodAnnotations = {
+        "backup.velero.io/backup-volumes": "data"
+      };
+    }
+
     const Harbor = new k8s.helm.v3.Chart(
       appName,
       {
@@ -138,10 +163,18 @@ export class Harbor extends pulumi.ComponentResource  {
             enabled: false
           },
           database: {
-            type: "internal"
+            type: "internal",
+            podAnnotations: databasePodAnnotations
           },
           redis: {
-            type: "internal"
+            type: "internal",
+            podAnnotations: redisPodAnnotations
+          },
+          jobservice: {
+            podAnnotations: jobservicePodAnnotations
+          },
+          registry: {
+            podAnnotations: registryPodAnnotations
           }
         }
       },
