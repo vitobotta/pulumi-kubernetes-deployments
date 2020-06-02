@@ -89,7 +89,7 @@ export class Velero extends pulumi.ComponentResource  {
           configuration: {
             provider: "aws",
             backupStorageLocation: {
-              name: "aws",
+              name: "default",
               bucket: s3Bucket,
               config: {
                 region: s3Region,
