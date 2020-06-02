@@ -2,7 +2,7 @@ import * as pulumi from '@pulumi/pulumi'
 
 const config: pulumi.Config = new pulumi.Config('velero')
 
-export const version: string = config.require('version')
+export const version: string = config.get('version') || "2.11.0"
 export const namespace: string = config.get('namespace') || "velero"
 export const s3Bucket: string = config.require('s3Bucket')
 export const s3Region: string = config.require('s3Region')
