@@ -60,7 +60,7 @@ export class Redis extends pulumi.ComponentResource  {
             enabled: sentinelEnabled
           },
           master: {
-            peristence: {
+            persistence: {
               enabled: persistenceEnabled,
               storageClass: persistenceStorageClass,
               size: persistenceSize
@@ -76,7 +76,7 @@ export class Redis extends pulumi.ComponentResource  {
             }
           },
           slave: {
-            peristence: {
+            persistence: {
               enabled: persistenceEnabled,
               storageClass: persistenceStorageClass,
               size: persistenceSize
