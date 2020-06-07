@@ -10,6 +10,7 @@ export interface RedisArgs {
   persistenceStorageClass?: pulumi.Input<string>,
   persistenceSize?: pulumi.Input<string>,
   maxmemoryPolicy?: pulumi.Input<string>,
+  memoryLimit?: pulumi.Input<string>
 }
 
 export class Redis extends pulumi.ComponentResource  {
@@ -29,6 +30,7 @@ export class Redis extends pulumi.ComponentResource  {
     const slaveCount = args.slaveCount || 1
     const sentinelEnabled = args.sentinelEnabled || false
     const maxmemoryPolicy = args.maxmemoryPolicy || "noeviction"
+    const memoryLimit = args.memoryLimit || "1Gi"
 
     const ns = new k8s.core.v1.Namespace(
       `${appName}-ns`,
@@ -66,7 +68,12 @@ export class Redis extends pulumi.ComponentResource  {
             extraFlags: [
               `--maxmemory-policy ${maxmemoryPolicy}`
             ],
-            disableCommands: []
+            disableCommands: [],
+            resources: {
+              limits: {
+                memory: memoryLimit
+              }
+            }
           },
           slave: {
             peristence: {
