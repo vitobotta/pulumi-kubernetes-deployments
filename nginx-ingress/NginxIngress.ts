@@ -142,7 +142,8 @@ export class NginxIngress extends pulumi.ComponentResource  {
         "proxy-buffer-size": "8k",
         "proxy-buffers": "4 8k",
         "enable-brotli": "true",
-        "ssl-protocols": "TLSv1.3 TLSv1.2"
+        "ssl-protocols": "TLSv1.3 TLSv1.2",
+        "enable-ocsp": "true"
       }
     },
     {
