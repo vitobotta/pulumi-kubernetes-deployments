@@ -13,6 +13,7 @@ export interface ZalandoPostgresClusterArgs {
   s3Bucket?: pulumi.Input<string>,
   s3AccessKeyId?: pulumi.Input<string>,
   s3SecretAccessKey?: pulumi.Input<string>,
+  s3ForcePathStyle?: pulumi.Input<boolean>,
   version?: pulumi.Input<string>,
   sharedBuffers?: pulumi.Input<string>,
   maxConnections?: pulumi.Input<number>,
@@ -29,6 +30,12 @@ export interface ZalandoPostgresClusterArgs {
   cloneClusterID?: pulumi.Input<string>,
   cloneClusterName?: pulumi.Input<string>,
   cloneTargetTime?: pulumi.Input<string>,
+  users?: {
+    [key: string]: Array<string>,
+  },
+  databases?: {
+    [key: string]: string;
+  }
 }
 
 export class ZalandoPostgresCluster extends pulumi.ComponentResource  {
@@ -52,6 +59,7 @@ export class ZalandoPostgresCluster extends pulumi.ComponentResource  {
     const s3Bucket: string = String(args.s3Bucket || config.get('s3Bucket'))
     const s3AccessKeyId = pulumi.output(args.s3AccessKeyId || config.getSecret('s3AccessKeyId'))
     const s3SecretAccessKey = pulumi.output(args.s3SecretAccessKey || config.getSecret('s3SecretAccessKey'))
+    const s3ForcePathStyle = pulumi.output(args.s3ForcePathStyle || config.getSecret('s3ForcePathStyle') || false).toString()
 
     const podConfigMapName = args.podConfigMapName || "postgres-pod-config"
     const numberOfInstances = args.numberOfInstances || 1
@@ -69,8 +77,10 @@ export class ZalandoPostgresCluster extends pulumi.ComponentResource  {
     const walBackupSchedule = args.walBackupSchedule || "0 */12 * * *"
     const clone = args.clone || false
     const cloneClusterID = args.cloneClusterID || ""
-    const cloneClusterName = args.cloneClusterName || ""
     const cloneTargetTime = args.cloneTargetTime || "2050-02-04T12:49:03+00:00"
+    const cloneClusterName = args.cloneClusterName || ""
+    const users = args.users || {}
+    const databases = args.databases || {}
 
     let configMapData = {}
 
@@ -84,6 +94,7 @@ export class ZalandoPostgresCluster extends pulumi.ComponentResource  {
         "AWS_SECRET_ACCESS_KEY": s3SecretAccessKey,
         "AWS_ENDPOINT": s3Endpoint,
         "AWS_REGION": s3Region,
+        "AWS_S3_FORCE_PATH_STYLE": s3ForcePathStyle,
         "WALG_DISABLE_S3_SSE": "true",
         "USEWALG_RESTORE": "true",
         "CLONE_METHOD": "CLONE_WITH_WALE",
@@ -151,8 +162,8 @@ export class ZalandoPostgresCluster extends pulumi.ComponentResource  {
             storageClass: storageClass
           },
           numberOfInstances: numberOfInstances,
-          users: {},
-          databases: {},
+          users: users,
+          databases: databases,
           postgresql: {
             version: version,
             parameters: {
