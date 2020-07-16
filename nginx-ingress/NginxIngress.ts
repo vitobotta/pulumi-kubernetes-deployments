@@ -1,6 +1,5 @@
 import * as k8s from '@pulumi/kubernetes'
 import * as pulumi from '@pulumi/pulumi'
-
 import * as config from './config'
 
 
@@ -115,8 +114,12 @@ export class NginxIngress extends pulumi.ComponentResource  {
                   "prometheus.io/scrape": "true",
                   "prometheus.io/port": "10254"
                 }
+              },
+              serviceMonitor: {
+                enabled: true,
+                scrapeInterval: "10s"
               }
-            }            
+            },
           }
         }
       },
