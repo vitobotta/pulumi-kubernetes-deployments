@@ -7,7 +7,8 @@ import * as nodepath from "path";
 import * as config from './config'
 
 export interface VeleroArgs {
-  version?: pulumi.Input<string>,
+  imageTag?: pulumi.Input<string>,
+  chartVersion?: pulumi.Input<string>,
   namespace?: pulumi.Input<string>,
   s3Bucket?: pulumi.Input<string>,
   s3Region?: pulumi.Input<string>,
@@ -28,7 +29,8 @@ export class Velero extends pulumi.ComponentResource  {
 
     super('Velero', appName, {}, opts)
 
-    const version = args.version || config.version
+    const imageTag = args.imageTag || config.imageTag
+    const chartVersion = args.chartVersion || config.chartVersion
     const namespace = args.namespace || config.namespace
     const s3Bucket = args.s3Bucket || config.s3Bucket
     const s3Region = args.s3Region || config.s3Region
@@ -69,7 +71,7 @@ export class Velero extends pulumi.ComponentResource  {
     const chartDir = path.resolve(`/tmp/${appName}`);
 
     if (!fs.existsSync(nodepath.join(chartDir, "velero"))) {
-      k8s.helm.v3.fetch(`https://github.com/vmware-tanzu/helm-charts/releases/download/velero-${version}/velero-${version}.tgz`,
+      k8s.helm.v3.fetch(`https://github.com/vmware-tanzu/helm-charts/releases/download/velero-${chartVersion}/velero-${chartVersion}.tgz`,
         {
           destination: chartDir,
           untar: true,
@@ -86,6 +88,9 @@ export class Velero extends pulumi.ComponentResource  {
         path: nodepath.join(chartDir, "velero"),
         namespace: namespace,
         values: {
+          image: {
+            tag: imageTag
+          },
           configuration: {
             provider: "aws",
             backupStorageLocation: {
