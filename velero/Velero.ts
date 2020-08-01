@@ -78,9 +78,9 @@ export class Velero extends pulumi.ComponentResource  {
         });
     }    
 
-    const crds = new k8s.yaml.ConfigGroup(`${appName}-crds`, {
-      files: [ path.join(nodepath.join(chartDir, "velero/crds", "*.yaml")) ],
-    });    
+    // const crds = new k8s.yaml.ConfigGroup(`${appName}-crds`, {
+    //   files: [ path.join(nodepath.join(chartDir, "velero/crds", "*.yaml")) ],
+    // });    
 
     const Velero = new k8s.helm.v3.Chart(
       appName,
@@ -129,7 +129,7 @@ export class Velero extends pulumi.ComponentResource  {
         parent: this,
         dependsOn: [
           ns,
-          crds,
+          // crds,
           awsCredentialsSecret,
         ],
       },
