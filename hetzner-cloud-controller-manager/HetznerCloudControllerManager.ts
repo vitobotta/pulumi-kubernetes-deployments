@@ -4,6 +4,7 @@ import * as pulumi from '@pulumi/pulumi'
 export interface HetznerCloudControllerManagerArgs {
   apiToken?: pulumi.Input<string>,
   version?: pulumi.Input<string>,
+  network?: pulumi.Input<string>,
 }
 
 export class HetznerCloudControllerManager extends pulumi.ComponentResource  {
@@ -17,9 +18,10 @@ export class HetznerCloudControllerManager extends pulumi.ComponentResource  {
     const config: pulumi.Config = new pulumi.Config(appName)
 
     const apiToken = pulumi.output(args.apiToken || config.getSecret('apiToken') || "blah")
-    const version = args.version || "v1.6.0"
+    const version = args.version || "v1.6.1"
+    const network = args.version || "default"
 
-    const manifestURL = `https://raw.githubusercontent.com/hetznercloud/hcloud-cloud-controller-manager/master/deploy/${version}.yaml`;
+    const manifestURL = `https://raw.githubusercontent.com/hetznercloud/hcloud-cloud-controller-manager/master/deploy/${version}-networks.yaml`;
 
     const secret = new k8s.core.v1.Secret(`${appName}-hetzner-cloud-token`, 
       {
@@ -28,7 +30,8 @@ export class HetznerCloudControllerManager extends pulumi.ComponentResource  {
           namespace: "kube-system",
         },
         stringData: {
-          token: apiToken
+          token: apiToken,
+          network: network
         },
       },
       {
