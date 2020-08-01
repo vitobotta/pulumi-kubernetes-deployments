@@ -16,6 +16,9 @@ export interface NginxIngressArgs {
   clientMaxBodySize?: pulumi.Input<string>,
   deploymentKind?: pulumi.Input<string>,
   serviceAnnotations?: pulumi.Input<object>,
+  realIpFromCloudflare?: pulumi.Input<boolean>,
+  enableServiceMonitor?: pulumi.Input<boolean>,
+  serviceMonitorNamespace?: pulumi.Input<string>,
 }
 
 export class NginxIngress extends pulumi.ComponentResource  {
@@ -39,6 +42,15 @@ export class NginxIngress extends pulumi.ComponentResource  {
     const clientMaxBodySize = args.clientMaxBodySize || config.clientMaxBodySize
     const deploymentKind = args.deploymentKind || "DaemonSet"
     const serviceAnnotations = args.serviceAnnotations || {}
+    const realIpFromCloudflare = args.realIpFromCloudflare || false
+    const enableServiceMonitor = args.enableServiceMonitor || false
+    const serviceMonitorNamespace = args.serviceMonitorNamespace || "cattle-prometheus"
+
+    let server_snippet = "";
+
+    if (realIpFromCloudflare) {
+      server_snippet = "real_ip_header CF-Connecting-IP;"
+    }
 
     let useHostPort: boolean = true
     let hostNetwork: boolean = true
@@ -54,6 +66,27 @@ export class NginxIngress extends pulumi.ComponentResource  {
       },
       { parent: this },
     )    
+
+    let dependsOn = [ns]
+    
+    // if (enableServiceMonitor) {
+    //   const serviceMonitorNs = new k8s.core.v1.Namespace(
+    //     `${appName}-serviceMonitorNamespace`,
+    //     {
+    //       metadata: {
+    //         name: serviceMonitorNamespace,
+    //       },
+    //     },
+    //     { parent: this },
+    //   )        
+
+    //   dependsOn = [
+    //     ns,
+    //     serviceMonitorNs
+    //   ]
+    // }
+
+    
 
     switch (serviceType) {
       case "ClusterIP":
@@ -116,8 +149,15 @@ export class NginxIngress extends pulumi.ComponentResource  {
                 }
               },
               serviceMonitor: {
-                enabled: true,
-                scrapeInterval: "10s"
+                enabled: enableServiceMonitor,
+                scrapeInterval: "10s",
+                namespaceSelector: {
+                  any: true
+                },
+                namespace: serviceMonitorNamespace,
+                // additionalLabels: {
+                //   release: "prometheus-operator"
+                // }
               }
             },
           }
@@ -125,9 +165,7 @@ export class NginxIngress extends pulumi.ComponentResource  {
       },
       {
         parent: this,
-        dependsOn: [
-          ns,
-        ],
+        dependsOn: dependsOn,
       },
     )    
 
@@ -146,7 +184,9 @@ export class NginxIngress extends pulumi.ComponentResource  {
         "proxy-buffers": "4 8k",
         "enable-brotli": "true",
         "ssl-protocols": "TLSv1.3 TLSv1.2",
-        "enable-ocsp": "true"
+        "enable-ocsp": "true",
+        "no-tls-redirect-locations": "/.well-known/acme-challenge,/verification",
+        "server-snippet": server_snippet
       }
     },
     {
