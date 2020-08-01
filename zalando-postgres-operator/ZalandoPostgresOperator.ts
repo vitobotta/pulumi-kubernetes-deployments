@@ -53,6 +53,10 @@ export class ZalandoPostgresOperator extends pulumi.ComponentResource  {
 
     const chartDir = path.resolve(`/tmp/${appName}`);
 
+    if (fs.existsSync(nodepath.join(chartDir))) {
+      shell.rm("-rf", nodepath.join(chartDir));
+    }
+
     if (!fs.existsSync(nodepath.join(chartDir, "postgres-operator"))) {
       k8s.helm.v3.fetch(`https://opensource.zalando.com/postgres-operator/charts/postgres-operator/postgres-operator-${version}.tgz`,
         {
@@ -121,6 +125,9 @@ export class ZalandoPostgresOperator extends pulumi.ComponentResource  {
       configTeamsApi: {
         enable_team_superuser: false,
         enable_teams_api: false
+      },
+      crd: {
+        create: false
       }
     }
   
@@ -129,6 +136,14 @@ export class ZalandoPostgresOperator extends pulumi.ComponentResource  {
       {
         path: nodepath.join(chartDir, "postgres-operator"),
         namespace: namespace,
+        transformations: [
+          (obj: any, opts: pulumi.CustomResourceOptions) => {
+            if (obj.kind === "CustomResourceDefinition" && (obj.metadata.name === "postgresqls.acid.zalan.do" || obj.metadata.name === "operatorconfigurations.acid.zalan.do")) {
+              obj.apiVersion = "v1"
+              obj.kind = "List"
+            }
+          },
+        ],
         values: {...crdValues(), ...customValues}
       },
       {
