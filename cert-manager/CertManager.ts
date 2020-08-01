@@ -39,18 +39,18 @@ export class CertManager extends pulumi.ComponentResource  {
       { parent: this },
     )
   
-    const crds = new k8s.yaml.ConfigFile(
-      `${appName}-crds`,
-      {
-        file: crdsManifest,
-      },
-      {
-        parent: this,
-        dependsOn: [
-          ns,
-        ],
-      },
-    )
+    // const crds = new k8s.yaml.ConfigFile(
+    //   `${appName}-crds`,
+    //   {
+    //     file: crdsManifest,
+    //   },
+    //   {
+    //     parent: this,
+    //     dependsOn: [
+    //       ns,
+    //     ],
+    //   },
+    // )
 
     const certManager = new k8s.helm.v3.Chart(
       appName,
@@ -65,14 +65,15 @@ export class CertManager extends pulumi.ComponentResource  {
           extraArgs: [
             "--dns01-recursive-nameservers-only",
             "--dns01-recursive-nameservers=1.1.1.1:53,1.0.0.1:53"
-          ]
+          ],
+          installCRDs: "true"
         }
       },
       {
         parent: this,
         dependsOn: [
           ns,
-          crds,
+          // crds,
         ],
       },
     )
