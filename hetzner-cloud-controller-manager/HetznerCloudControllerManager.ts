@@ -18,7 +18,7 @@ export class HetznerCloudControllerManager extends pulumi.ComponentResource  {
     const config: pulumi.Config = new pulumi.Config(appName)
 
     const apiToken = pulumi.output(args.apiToken || config.getSecret('apiToken') || "blah")
-    const version = args.version || "v1.6.1"
+    const version = args.version || "v1.7.0"
     const network = args.version || "default"
 
     const manifestURL = `https://raw.githubusercontent.com/hetznercloud/hcloud-cloud-controller-manager/master/deploy/${version}-networks.yaml`;

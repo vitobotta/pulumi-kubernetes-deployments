@@ -42,6 +42,12 @@ export class Memcached extends pulumi.ComponentResource  {
           memcached: {
             maxItemMemory: memory
           },
+          metrics: {
+            enabled: true,
+            serviceMonitor: {
+              enabled: true
+            }
+          },
           replicaCount: replicaCount
         }
       },

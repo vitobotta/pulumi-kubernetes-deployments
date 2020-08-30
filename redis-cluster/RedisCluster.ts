@@ -2,13 +2,12 @@ import * as k8s from '@pulumi/kubernetes'
 import * as pulumi from '@pulumi/pulumi'
 
 export interface RedisClusterArgs {
-  masterNodes: pulumi.Input<string>,
-  replicasPerMaster: pulumi.Input<string>,
+  masterNodes?: pulumi.Input<number>,
+  replicasPerMaster?: pulumi.Input<number>,
   namespace?: pulumi.Input<string>,
   persistenceEnabled?: pulumi.Input<boolean>,
   persistenceStorageClass?: pulumi.Input<string>,
   persistenceSize?: pulumi.Input<string>,
-  maxmemoryPolicy?: pulumi.Input<string>,
   memoryLimit?: pulumi.Input<string>,  
 }
 
@@ -22,13 +21,24 @@ export class RedisCluster extends pulumi.ComponentResource  {
     super(appName, appName, {}, opts)
 
     const namespace = args.namespace || "redis-cluster"
-    const persistenceEnabled = args.persistenceEnabled || true
+    let persistenceEnabled = args.persistenceEnabled 
     const persistenceStorageClass = args.persistenceStorageClass || ""
     const persistenceSize = args.persistenceSize || "1Gi"
-    const masterNodes = args.masterNodes || 3
-    const replicasPerMaster = args.replicasPerMaster || 1
-    const maxmemoryPolicy = args.maxmemoryPolicy || "noeviction"
+    let masterNodes = args.masterNodes
+    let replicasPerMaster = args.replicasPerMaster
     const memoryLimit = args.memoryLimit || "1Gi"
+
+    if (persistenceEnabled == null) {
+      persistenceEnabled = true
+    }
+
+    if (masterNodes == null) {
+      masterNodes = 3
+    }
+
+    if (replicasPerMaster == null) {
+      replicasPerMaster = 0
+    }
 
     const ns = new k8s.core.v1.Namespace(
       `${appName}-ns`,
@@ -39,7 +49,8 @@ export class RedisCluster extends pulumi.ComponentResource  {
       },
       { parent: this },
     )    
-
+    
+    
     const redisCluster = new k8s.helm.v3.Chart(
       appName,
       {
@@ -50,31 +61,28 @@ export class RedisCluster extends pulumi.ComponentResource  {
         namespace: namespace,
         values: {
           usePassword: false,
-          cluster: {
-            nodes: masterNodes,
-            replicas: replicasPerMaster
-          },
           persistence: {
             enabled: persistenceEnabled,
             storageClass: persistenceStorageClass,
             size: persistenceSize
           },
-          extraFlags: [
-            `--maxmemory-policy ${maxmemoryPolicy}`
-          ],
-          resources: {
-            limits: {
-              memory: memoryLimit
-            }
+          cluster: {
+            nodes: masterNodes,
+            replicas: replicasPerMaster
+          },
+          redis: {
+            resources: {
+              limits: {
+                memory: memoryLimit
+              }
+            },
           }
         }
       },
       {
         parent: this,
-        dependsOn: [
-          ns,
-        ],
+        dependsOn: ns,
       },
-    )           
+    )      
   }
 }

@@ -30,6 +30,7 @@ export interface ZalandoPostgresClusterArgs {
   cloneClusterID?: pulumi.Input<string>,
   cloneClusterName?: pulumi.Input<string>,
   cloneTargetTime?: pulumi.Input<string>,
+  enableConnectionPooling?: pulumi.Input<boolean>,
   maxPoolConnections?: pulumi.Input<number>,
   poolUser?: pulumi.Input<string>,
   users?: {
@@ -83,6 +84,7 @@ export class ZalandoPostgresCluster extends pulumi.ComponentResource  {
     const cloneClusterName = args.cloneClusterName || ""
     const users = args.users || {}
     const databases = args.databases || {}
+    const enableConnectionPooling = args.enableConnectionPooling || false
     const maxPoolConnections = args.databases || 200
     const poolUser = args.poolUser || "pooler"
 
@@ -175,10 +177,11 @@ export class ZalandoPostgresCluster extends pulumi.ComponentResource  {
               max_connections: maxConnections
             }
           },
-          enableConnectionPooler: false,
-          // connectionPooler: {
-          //   user: poolUser
-          // },
+          enableConnectionPooler: enableConnectionPooling,
+          connectionPooler: {
+            user: poolUser,
+            maxDBConnections: maxPoolConnections
+          },
           resources: {
             requests: {
               cpu: cpuRequest,
