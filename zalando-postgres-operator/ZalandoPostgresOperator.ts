@@ -4,6 +4,8 @@ import * as fs from "fs";
 import * as path from "path";
 import * as nodepath from "path";
 import * as shell from "shelljs";
+import * as rp from "request-promise";
+import * as tar from "tar";
 
 
 export interface ZalandoPostgresOperatorArgs {
@@ -26,7 +28,10 @@ export class ZalandoPostgresOperator extends pulumi.ComponentResource  {
   ) {
 
     super('ZalandoPostgres', appName, {}, opts)
+    this.install(appName, args);      
+  }
 
+  async install(appName: string, args: ZalandoPostgresOperatorArgs) {
     const config: pulumi.Config = new pulumi.Config(appName)
 
     const version = args.version || config.get('version') || "1.4.0"
@@ -57,18 +62,18 @@ export class ZalandoPostgresOperator extends pulumi.ComponentResource  {
       shell.rm("-rf", nodepath.join(chartDir));
     }
 
-    if (!fs.existsSync(nodepath.join(chartDir, "postgres-operator"))) {
-      k8s.helm.v3.fetch(`https://opensource.zalando.com/postgres-operator/charts/postgres-operator/postgres-operator-${version}.tgz`,
-        {
-          destination: chartDir,
-          untar: true,
-        });
+    fs.mkdirSync(chartDir, { recursive: true });
 
-      // Pulumi always loads values.yaml in the current version, which causes 
-      // problems to the operator when installing in CRD mode -recommended- instead of 
-      // ConfigMap mode. So we are overwriting values.yaml with the contents of values-crd.yaml
-      shell.cp(nodepath.join(chartDir, "postgres-operator/values-crd.yaml"), nodepath.join(chartDir, "postgres-operator/values.yaml"));
-    }    
+    const url = `https://opensource.zalando.com/postgres-operator/charts/postgres-operator/postgres-operator-${version}.tgz`;
+    const arcName = nodepath.join(chartDir, `postgres-operator-${version}.tgz`);
+    const response = await rp.get({ uri: url, encoding: null });
+    fs.writeFileSync(arcName, response, { encoding: null });
+    tar.x({ file: arcName, cwd: chartDir, sync: true });        
+
+    // Pulumi always loads values.yaml in the current version, which causes 
+    // problems to the operator when installing in CRD mode -recommended- instead of 
+    // ConfigMap mode. So we are overwriting values.yaml with the contents of values-crd.yaml
+    shell.cp(nodepath.join(chartDir, "postgres-operator/values-crd.yaml"), nodepath.join(chartDir, "postgres-operator/values.yaml"));
 
     const crds = new k8s.yaml.ConfigGroup(`${appName}-crds`, {
       files: [ path.join(nodepath.join(chartDir, "postgres-operator/crds", "*.yaml")) ],
@@ -153,6 +158,6 @@ export class ZalandoPostgresOperator extends pulumi.ComponentResource  {
           crds
         ],
       },
-    )          
+    )        
   }
 }

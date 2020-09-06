@@ -3,8 +3,11 @@ import * as pulumi from '@pulumi/pulumi'
 import * as fs from "fs";
 import * as path from "path";
 import * as nodepath from "path";
+import * as config from './config';
+import * as rp from "request-promise";
+import * as tar from "tar";
+import * as shell from "shelljs";
 
-import * as config from './config'
 
 export interface VeleroArgs {
   imageTag?: pulumi.Input<string>,
@@ -26,9 +29,11 @@ export class Velero extends pulumi.ComponentResource  {
     args: VeleroArgs,
     opts?: pulumi.ComponentResourceOptions,
   ) {
-
     super('Velero', appName, {}, opts)
+    this.install(appName, args);
+  }
 
+  async install(appName: string, args: VeleroArgs) {
     const imageTag = args.imageTag || config.imageTag
     const chartVersion = args.chartVersion || config.chartVersion
     const namespace = args.namespace || config.namespace
@@ -68,19 +73,20 @@ export class Velero extends pulumi.ComponentResource  {
       ],
     });
 
+
     const chartDir = path.resolve(`/tmp/${appName}`);
 
-    if (!fs.existsSync(nodepath.join(chartDir, "velero"))) {
-      k8s.helm.v3.fetch(`https://github.com/vmware-tanzu/helm-charts/releases/download/velero-${chartVersion}/velero-${chartVersion}.tgz`,
-        {
-          destination: chartDir,
-          untar: true,
-        });
-    }    
+    if (fs.existsSync(nodepath.join(chartDir))) {
+      shell.rm("-rf", nodepath.join(chartDir));
+    } 
+    
+    fs.mkdirSync(chartDir, { recursive: true });
 
-    // const crds = new k8s.yaml.ConfigGroup(`${appName}-crds`, {
-    //   files: [ path.join(nodepath.join(chartDir, "velero/crds", "*.yaml")) ],
-    // });    
+    const url = `https://github.com/vmware-tanzu/helm-charts/releases/download/velero-${chartVersion}/velero-${chartVersion}.tgz`;
+    const arcName = nodepath.join(chartDir, `velero-${chartVersion}.tgz`);
+    const response = await rp.get({ uri: url, encoding: null });
+    fs.writeFileSync(arcName, response, { encoding: null });
+    tar.x({ file: arcName, cwd: chartDir, sync: true });        
 
     const Velero = new k8s.helm.v3.Chart(
       appName,
@@ -129,10 +135,9 @@ export class Velero extends pulumi.ComponentResource  {
         parent: this,
         dependsOn: [
           ns,
-          // crds,
           awsCredentialsSecret,
         ],
       },
-    )
+    )    
   }
 }
