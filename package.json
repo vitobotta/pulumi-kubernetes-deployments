@@ -6,11 +6,18 @@
     "dependencies": {
         "@pulumi/kubernetes": "^2.5.1",
         "@pulumi/pulumi": "^2.9.2",
+        "@types/request": "^2.48.5",
+        "@types/request-promise": "^4.1.46",
         "@types/shelljs": "^0.8.8",
+        "@types/tar": "^4.0.3",
         "@types/yaml": "^1.9.7",
         "fs": "0.0.1-security",
+        "http": "0.0.1-security",
         "js-yaml": "^3.14.0",
         "path": "^0.12.7",
-        "shelljs": "^0.8.4"
+        "request": "^2.88.2",
+        "request-promise": "^4.2.6",
+        "shelljs": "^0.8.4",
+        "tar": "^6.0.5"
     }
 }
