@@ -4,8 +4,8 @@
         "@types/node": "^14.0.23"
     },
     "dependencies": {
-        "@pulumi/kubernetes": "^2.4.2",
-        "@pulumi/pulumi": "^2.7.1",
+        "@pulumi/kubernetes": "^2.5.1",
+        "@pulumi/pulumi": "^2.9.2",
         "@types/shelljs": "^0.8.8",
         "@types/yaml": "^1.9.7",
         "fs": "0.0.1-security",
