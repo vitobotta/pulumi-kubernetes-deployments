@@ -109,6 +109,7 @@ export class Velero extends pulumi.ComponentResource  {
               prefix: prefix
             },
           },
+          backupsEnabled: true,
           snapshotsEnabled: false,
           deployRestic: deployRestic,
           metrics: {
