@@ -1,11 +1,11 @@
 {
     "name": "dynablogger",
     "devDependencies": {
-        "@types/node": "^14.0.23"
+        "@types/node": "^14.11.1"
     },
     "dependencies": {
-        "@pulumi/kubernetes": "^2.5.1",
-        "@pulumi/pulumi": "^2.9.2",
+        "@pulumi/kubernetes": "^2.6.1",
+        "@pulumi/pulumi": "^2.10.1",
         "@types/request": "^2.48.5",
         "@types/request-promise": "^4.1.46",
         "@types/shelljs": "^0.8.8",
