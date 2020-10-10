@@ -3,7 +3,7 @@ import * as pulumi from '@pulumi/pulumi'
 
 export interface HetznerCloudControllerManagerArgs {
   apiToken?: pulumi.Input<string>,
-  version?: pulumi.Input<string>,
+  // version?: pulumi.Input<string>,
   network?: pulumi.Input<string>,
 }
 
@@ -18,10 +18,11 @@ export class HetznerCloudControllerManager extends pulumi.ComponentResource  {
     const config: pulumi.Config = new pulumi.Config(appName)
 
     const apiToken = pulumi.output(args.apiToken || config.getSecret('apiToken') || "blah")
-    const version = args.version || "v1.7.0"
-    const network = args.version || "default"
+    // const version = args.version || "v1.8.0"
+    const network = args.network || "default"
 
-    const manifestURL = `https://raw.githubusercontent.com/hetznercloud/hcloud-cloud-controller-manager/master/deploy/${version}-networks.yaml`;
+    // const manifestURL = `https://raw.githubusercontent.com/hetznercloud/hcloud-cloud-controller-manager/master/deploy/${version}-networks.yaml`;
+    const manifestURL = `https://raw.githubusercontent.com/hetznercloud/hcloud-cloud-controller-manager/master/deploy/ccm-networks.yaml`;
 
     const secret = new k8s.core.v1.Secret(`${appName}-hetzner-cloud-token`, 
       {
