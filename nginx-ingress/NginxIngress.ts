@@ -160,15 +160,15 @@ export class NginxIngress extends pulumi.ComponentResource  {
                 }
               },
               serviceMonitor: {
-                enabled: enableServiceMonitor,
+                enabled: true, //enableServiceMonitor,
                 scrapeInterval: "10s",
                 namespaceSelector: {
                   any: true
                 },
                 namespace: serviceMonitorNamespace,
-                // additionalLabels: {
-                //   release: "prometheus-operator"
-                // }
+                additionalLabels: {
+                  release: "prometheus-operator"
+                }
               }
             },
           }
