@@ -2,7 +2,7 @@ import * as pulumi from '@pulumi/pulumi'
 
 const config: pulumi.Config = new pulumi.Config('nginx-ingress')
 
-export const version: string = config.get('version') || "1.34.2"
+export const version: string = config.get('version') || "3.7.1"
 export const namespace: string = config.get('namespace') || "nginx-ingress"
 export const serviceType: string = config.get('serviceType') || "ClusterIP"
 export const ingressClass: string = config.get('ingressClass') || "nginx"

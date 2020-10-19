@@ -129,10 +129,10 @@ export class NginxIngress extends pulumi.ComponentResource  {
     const nginxIngress = new k8s.helm.v3.Chart(
       appName,
       {
-        chart: "nginx-ingress",
+        chart: "ingress-nginx",
         version: version,
         fetchOpts: {
-          repo: 'https://kubernetes-charts.storage.googleapis.com',
+          repo: 'https://kubernetes.github.io/ingress-nginx',
         },
         namespace: namespace,
         values: {
@@ -143,11 +143,11 @@ export class NginxIngress extends pulumi.ComponentResource  {
               type: serviceType,
               externalTrafficPolicy: externalTrafficPolicy,
               nodePorts: nodePorts,
-              annotations: serviceAnnotations
+              annotations: serviceAnnotations,
             },
             ingressClass: ingressClass,
-            daemonset: {
-              useHostPort: useHostPort,
+            admissionWebhooks: {
+              enabled: false
             },
             hostNetwork: hostNetwork,
             metrics: {
@@ -160,7 +160,7 @@ export class NginxIngress extends pulumi.ComponentResource  {
                 }
               },
               serviceMonitor: {
-                enabled: true, //enableServiceMonitor,
+                enabled: enableServiceMonitor,
                 scrapeInterval: "10s",
                 namespaceSelector: {
                   any: true
@@ -170,9 +170,9 @@ export class NginxIngress extends pulumi.ComponentResource  {
                   release: "prometheus-operator"
                 }
               }
-            },
+            },            
           }
-        }
+        },
       },
       {
         parent: this,
@@ -183,7 +183,7 @@ export class NginxIngress extends pulumi.ComponentResource  {
     const configMap = new k8s.core.v1.ConfigMap(`${appName}-config-map`, {
       metadata: {
         namespace: namespace,
-        name: `${appName}-controller`
+        name: `${appName}-ingress-nginx-controller`
       },      
       data: {
         "use-proxy-protocol": useProxyProtocol,
