@@ -17,7 +17,7 @@ export class HetznerCloudCSI extends pulumi.ComponentResource  {
 
     super('HetznerCloudCSI', appName, {}, opts)
 
-    const version = args.version || "v1.5.0"
+    const version = args.version || "v1.5.1"
     const token = args.token || config.token;
     const manifestURL = `https://raw.githubusercontent.com/hetznercloud/csi-driver/${version}/deploy/kubernetes/hcloud-csi.yml`;
 
