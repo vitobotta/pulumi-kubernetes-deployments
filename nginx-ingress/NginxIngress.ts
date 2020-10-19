@@ -180,32 +180,32 @@ export class NginxIngress extends pulumi.ComponentResource  {
       },
     )    
 
-    const configMap = new k8s.core.v1.ConfigMap(`${appName}-config-map`, {
-      metadata: {
-        namespace: namespace,
-        name: `${appName}-ingress-nginx-controller`
-      },      
-      data: {
-        "use-proxy-protocol": useProxyProtocol,
-        "use-forwarded-headers": useForwardedHeaders,
-        "client-max-body-size": clientMaxBodySize,
-        "http-redirect-code": "301",
-        "map-hash-bucket-size": "128", 
-        "proxy-buffer-size": "8k",
-        "proxy-buffers": "4 8k",
-        "enable-brotli": "true",
-        "ssl-protocols": "TLSv1.3 TLSv1.2",
-        "enable-ocsp": "true",
-        "no-tls-redirect-locations": "/.well-known/acme-challenge,/verification",
-        "server-snippet": server_snippet,
-        "proxy-real-ip-cidr": proxies_cidr
-      }
-    },
-    {
-      parent: this,
-      dependsOn: [
-        nginxIngress,
-      ],
-    })
+    // const configMap = new k8s.core.v1.ConfigMap(`${appName}-config-map`, {
+    //   metadata: {
+    //     namespace: namespace,
+    //     name: `${appName}-ingress-nginx-controller`
+    //   },      
+    //   data: {
+    //     "use-proxy-protocol": useProxyProtocol,
+    //     "use-forwarded-headers": useForwardedHeaders,
+    //     "client-max-body-size": clientMaxBodySize,
+    //     "http-redirect-code": "301",
+    //     "map-hash-bucket-size": "128", 
+    //     "proxy-buffer-size": "8k",
+    //     "proxy-buffers": "4 8k",
+    //     "enable-brotli": "true",
+    //     "ssl-protocols": "TLSv1.3 TLSv1.2",
+    //     "enable-ocsp": "true",
+    //     "no-tls-redirect-locations": "/.well-known/acme-challenge,/verification",
+    //     "server-snippet": server_snippet,
+    //     "proxy-real-ip-cidr": proxies_cidr
+    //   }
+    // },
+    // {
+    //   parent: this,
+    //   dependsOn: [
+    //     nginxIngress,
+    //   ],
+    // })
   }
 }
