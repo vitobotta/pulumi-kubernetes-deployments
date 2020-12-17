@@ -3,7 +3,7 @@ import * as pulumi from '@pulumi/pulumi'
 
 export interface MemcachedArgs {
   replicaCount?: pulumi.Input<number>,
-  memory?: pulumi.Input<number>,
+  memory?: pulumi.Input<string>,
   namespace?: pulumi.Input<string>,
 }
 
@@ -35,12 +35,21 @@ export class Memcached extends pulumi.ComponentResource  {
       {
         chart: "memcached",
         fetchOpts: {
-          repo: 'https://kubernetes-charts.storage.googleapis.com',
+          repo: 'https://charts.bitnami.com/bitnami',
         },
         namespace: namespace,
         values: {
-          memcached: {
-            maxItemMemory: memory
+          // memcached: {
+          //   maxItemMemory: memory
+          // },
+          persistence: {
+            enabled: false
+          },
+          architecture: "high-availability",
+          resources: {
+            requests: {
+              memory: memory
+            }
           },
           metrics: {
             enabled: true,

@@ -47,7 +47,7 @@ export class Redis extends pulumi.ComponentResource  {
       {
         chart: "redis",
         fetchOpts: {
-          repo: 'https://kubernetes-charts.storage.googleapis.com',
+          repo: 'https://charts.bitnami.com/bitnami',
         },
         namespace: namespace,
         values: {
