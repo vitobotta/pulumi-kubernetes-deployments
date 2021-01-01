@@ -34,7 +34,7 @@ export class ZalandoPostgresOperator extends pulumi.ComponentResource  {
   async install(appName: string, args: ZalandoPostgresOperatorArgs) {
     const config: pulumi.Config = new pulumi.Config(appName)
 
-    const version = args.version || config.get('version') || "1.4.0"
+    const version = args.version || config.get('version') || "1.5.0"
     const namespace = args.namespace || config.get('namespace') || "postgres-operator"
     const s3Region = args.s3Region || config.get('s3Region')
     const s3Endpoint = args.s3Endpoint || config.get('s3Endpoint')
@@ -44,7 +44,7 @@ export class ZalandoPostgresOperator extends pulumi.ComponentResource  {
     const s3AccessKeyId = config.requireSecret('s3AccessKeyId')
     const s3SecretAccessKey = config.requireSecret('s3SecretAccessKey')
     const spiloImage = args.spiloImage || "registry.opensource.zalan.do/acid/spilo-12:1.6-p2"
-    const logicalBackupsImage = args.logicalBackupsImage || "vitobotta/postgres-logical-backup:0.0.13"
+    // const logicalBackupsImage = args.logicalBackupsImage || "vitobotta/postgres-logical-backup:0.0.13"
 
     const ns = new k8s.core.v1.Namespace(
       `${appName}-ns`,
@@ -64,7 +64,8 @@ export class ZalandoPostgresOperator extends pulumi.ComponentResource  {
 
     fs.mkdirSync(chartDir, { recursive: true });
 
-    const url = `https://opensource.zalando.com/postgres-operator/charts/postgres-operator/postgres-operator-${version}.tgz`;
+    // const url = `https://opensource.zalando.com/postgres-operator/charts/postgres-operator/postgres-operator-${version}.tgz`;
+    const url = `https://raw.githubusercontent.com/zalando/postgres-operator/master/charts/postgres-operator/postgres-operator-${version}.tgz`;
     const arcName = nodepath.join(chartDir, `postgres-operator-${version}.tgz`);
     const response = await rp.get({ uri: url, encoding: null });
     fs.writeFileSync(arcName, response, { encoding: null });
@@ -110,7 +111,7 @@ export class ZalandoPostgresOperator extends pulumi.ComponentResource  {
         enable_database_access: true
       },
       configLogicalBackup: {
-        logical_backup_docker_image: logicalBackupsImage,
+        // logical_backup_docker_image: logicalBackupsImage,
         logical_backup_s3_access_key_id: s3AccessKeyId,
         logical_backup_s3_bucket: s3Bucket,
         logical_backup_s3_region: s3Region,
@@ -122,10 +123,10 @@ export class ZalandoPostgresOperator extends pulumi.ComponentResource  {
       configGeneral: {
         enable_crd_validation: true,
         enable_shm_volume: true,
-        workers: 4,
-        min_instances: -1,
-        max_instances: -1,
-        docker_image: spiloImage
+        // workers: 4,
+        // min_instances: -1,
+        // max_instances: -1,
+        // docker_image: spiloImage
       },
       configTeamsApi: {
         enable_team_superuser: false,

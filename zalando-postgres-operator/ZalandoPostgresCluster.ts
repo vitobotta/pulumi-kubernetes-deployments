@@ -27,6 +27,7 @@ export interface ZalandoPostgresClusterArgs {
   walBackupsToRetain?: pulumi.Input<string>,
   walBackupSchedule?: pulumi.Input<string>,
   clone?: pulumi.Input<boolean>,
+  cloneDirectly?: pulumi.Input<boolean>,
   cloneClusterID?: pulumi.Input<string>,
   cloneClusterName?: pulumi.Input<string>,
   cloneTargetTime?: pulumi.Input<string>,
@@ -79,6 +80,7 @@ export class ZalandoPostgresCluster extends pulumi.ComponentResource  {
     const walBackupsToRetain = args.walBackupsToRetain || "14"
     const walBackupSchedule = args.walBackupSchedule || "0 */12 * * *"
     const clone = args.clone || false
+    const cloneDirectly = args.cloneDirectly || false
     const cloneClusterID = args.cloneClusterID || ""
     const cloneTargetTime = args.cloneTargetTime || "2050-02-04T12:49:03+00:00"
     const cloneClusterName = args.cloneClusterName || ""
@@ -89,6 +91,9 @@ export class ZalandoPostgresCluster extends pulumi.ComponentResource  {
     const poolUser = args.poolUser || "pooler"
 
     let configMapData = {}
+    let cloneSettings = {}
+
+    cloneSettings = {}
 
     if (clone) {
       configMapData = {
@@ -100,7 +105,7 @@ export class ZalandoPostgresCluster extends pulumi.ComponentResource  {
         "AWS_SECRET_ACCESS_KEY": s3SecretAccessKey,
         "AWS_ENDPOINT": s3Endpoint,
         "AWS_REGION": s3Region,
-        "AWS_S3_FORCE_PATH_STYLE": s3ForcePathStyle,
+        "AWS_S3_FORCE_PATH_STYLE": "false",
         "WALG_DISABLE_S3_SSE": "true",
         "USEWALG_RESTORE": "true",
         "CLONE_METHOD": "CLONE_WITH_WALE",
@@ -114,17 +119,34 @@ export class ZalandoPostgresCluster extends pulumi.ComponentResource  {
         "CLONE_SCOPE": cloneClusterName
       }
     } else {
-      configMapData = {
-        "BACKUP_SCHEDULE": walBackupSchedule,
-        "USE_WALG_BACKUP": String(enableWalBackups),
-        "BACKUP_NUM_TO_RETAIN": walBackupsToRetain,
-        "WAL_S3_BUCKET": s3Bucket,
-        "AWS_ACCESS_KEY_ID": s3AccessKeyId,
-        "AWS_SECRET_ACCESS_KEY": s3SecretAccessKey,
-        "AWS_ENDPOINT": s3Endpoint,
-        "AWS_REGION": s3Region,
-        "WALG_DISABLE_S3_SSE": "true",
-      }
+      // cloneSettings = {
+      //   clone: {
+      //     uid: cloneClusterID,
+      //     cluster: cloneClusterName,
+      //     timestamp: cloneTargetTime,
+      //     s3_endpoint: `https://${s3Endpoint}`,
+      //     s3_access_key_id: s3AccessKeyId,
+      //     s3_secret_access_key: s3SecretAccessKey,
+      //     s3_force_path_style: s3ForcePathStyle  
+      //   }
+      // }
+    // } else if (cloneDirectly) {
+    //   cloneSettings = {
+    //     clone: {
+    //       cluster: cloneClusterName
+    //     }
+    //   }
+        configMapData = {
+          "BACKUP_SCHEDULE": walBackupSchedule,
+          "USE_WALG_BACKUP": String(enableWalBackups),
+          "BACKUP_NUM_TO_RETAIN": walBackupsToRetain,
+          "WAL_S3_BUCKET": s3Bucket,
+          "AWS_ACCESS_KEY_ID": s3AccessKeyId,
+          "AWS_SECRET_ACCESS_KEY": s3SecretAccessKey,
+          "AWS_ENDPOINT": s3Endpoint,
+          "AWS_REGION": s3Region,
+          "WALG_DISABLE_S3_SSE": "true",
+        }
     }
     
     const ns = new k8s.core.v1.Namespace(
@@ -153,6 +175,44 @@ export class ZalandoPostgresCluster extends pulumi.ComponentResource  {
       }
     );    
 
+    const spec = {
+      teamId: teamId,
+      volume: {
+        size: storageSize,
+        storageClass: storageClass
+      },
+      numberOfInstances: numberOfInstances,
+      users: users,
+      databases: databases,
+      postgresql: {
+        version: version,
+        parameters: {
+          shared_buffers: sharedBuffers,
+          max_connections: maxConnections
+        }
+      },
+      enableConnectionPooler: enableConnectionPooling,
+      connectionPooler: {
+        user: poolUser,
+        maxDBConnections: maxPoolConnections
+      },
+      resources: {
+        requests: {
+          cpu: cpuRequest,
+          memory: memoryRequest
+        },
+        limits: {
+          cpu: cpuLimit,
+          memory: memoryLimit
+        }
+      },
+      enableLogicalBackup: enableLogicalBackups,
+      logicalBackupSchedule: logicalBackupSchedule,
+      initContainers: [],
+      sidecars: []
+    }
+  
+
     const cluster = new k8s.apiextensions.CustomResource(appName, 
       {
         kind: "postgresql",
@@ -161,43 +221,8 @@ export class ZalandoPostgresCluster extends pulumi.ComponentResource  {
           name: appName,
           namespace: namespace,
         },
-        spec: {
-          teamId: teamId,
-          volume: {
-            size: storageSize,
-            storageClass: storageClass
-          },
-          numberOfInstances: numberOfInstances,
-          users: users,
-          databases: databases,
-          postgresql: {
-            version: version,
-            parameters: {
-              shared_buffers: sharedBuffers,
-              max_connections: maxConnections
-            }
-          },
-          enableConnectionPooler: enableConnectionPooling,
-          connectionPooler: {
-            user: poolUser,
-            maxDBConnections: maxPoolConnections
-          },
-          resources: {
-            requests: {
-              cpu: cpuRequest,
-              memory: memoryRequest
-            },
-            limits: {
-              cpu: cpuLimit,
-              memory: memoryLimit
-            }
-          },
-          enableLogicalBackup: enableLogicalBackups,
-          logicalBackupSchedule: logicalBackupSchedule,
-          initContainers: [],
-          sidecars: []
-        }
-      }, 
+        spec: {...spec, ...cloneSettings}, 
+      },
       {
         parent: this,
         dependsOn: [
